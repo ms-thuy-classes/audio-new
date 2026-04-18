@@ -18,11 +18,15 @@ body {
   align-items: center;
 }
 
+h2 {
+  margin-top: 20px;
+}
+
 /* player */
 .player {
   width: 90%;
   max-width: 800px;
-  margin-top: 30px;
+  margin-top: 20px;
 }
 
 #waveform {
@@ -99,13 +103,14 @@ body {
   margin-right: 10px;
   font-size: 12px;
   color: #ccc;
+  text-decoration: none;
 }
 </style>
 </head>
 
 <body>
 
-<h2>🎧 Auto Audio Player</h2>
+<h2>🎧 Audio Player - ms-thuy-classes</h2>
 
 <div class="player">
   <div id="waveform"></div>
@@ -128,14 +133,10 @@ body {
 <div class="playlist" id="playlist"></div>
 
 <script>
-/* 🔥 SỬA 2 DÒNG NÀY */
-const USERNAME = "ms-thuy-classes";
-const REPO = "audio-new";
-
 let tracks = [];
 let currentIndex = 0;
 
-/* wavesurfer */
+/* WaveSurfer */
 const wavesurfer = WaveSurfer.create({
   container: '#waveform',
   waveColor: '#666',
@@ -145,14 +146,14 @@ const wavesurfer = WaveSurfer.create({
   barGap: 2,
 });
 
-/* format time */
+/* Format time */
 function formatTime(sec){
   let m = Math.floor(sec/60);
   let s = Math.floor(sec%60);
   return `${m}:${s.toString().padStart(2,'0')}`;
 }
 
-/* controls */
+/* Controls */
 function playPause(){
   wavesurfer.playPause();
 }
@@ -161,7 +162,7 @@ function skip(sec){
   wavesurfer.skip(sec);
 }
 
-/* update time */
+/* Update time */
 wavesurfer.on('ready', ()=>{
   document.getElementById('total').innerText =
     formatTime(wavesurfer.getDuration());
@@ -172,14 +173,14 @@ wavesurfer.on('audioprocess', ()=>{
     formatTime(wavesurfer.getCurrentTime());
 });
 
-/* load track */
+/* Load track */
 function loadTrack(index){
   currentIndex = index;
   wavesurfer.load(tracks[index].src);
   updateActive();
 }
 
-/* render playlist */
+/* Render playlist */
 function renderPlaylist(){
   const el = document.getElementById("playlist");
   el.innerHTML = "";
@@ -190,8 +191,8 @@ function renderPlaylist(){
 
     div.innerHTML = `
       🎵 ${t.name}<br>
-      <a href="${t.src}" target="_blank">🔗 Link</a>
-      <a href="${t.src}" download>⬇ Download</a>
+      <a href="${t.src}" target="_blank" onclick="event.stopPropagation()">🔗 Link</a>
+      <a href="${t.src}" download onclick="event.stopPropagation()">⬇ Download</a>
     `;
 
     div.onclick = ()=> loadTrack(i);
@@ -199,14 +200,14 @@ function renderPlaylist(){
   });
 }
 
-/* highlight active */
+/* Highlight active */
 function updateActive(){
   document.querySelectorAll(".track").forEach((el,i)=>{
     el.classList.toggle("active", i === currentIndex);
   });
 }
 
-/* auto next */
+/* Auto next */
 wavesurfer.on('finish', ()=>{
   currentIndex++;
   if(currentIndex >= tracks.length) currentIndex = 0;
@@ -214,8 +215,8 @@ wavesurfer.on('finish', ()=>{
   wavesurfer.play();
 });
 
-/* 🚀 AUTO LOAD FILE FROM GITHUB */
-fetch(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/audio`)
+/* 🔥 AUTO LOAD FILE FROM YOUR REPO */
+fetch("https://api.github.com/repos/ms-thuy-classes/audio-new/contents/audio")
   .then(res => res.json())
   .then(files => {
     tracks = files
