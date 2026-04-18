@@ -9,9 +9,10 @@
 
 <style>
 body {
-  font-family: sans-serif;
   margin: 0;
-  background: linear-gradient(135deg,#fdfbfb,#ebedee);
+  font-family: sans-serif;
+  background: #0f0f1a;
+  color: white;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -20,105 +21,138 @@ body {
 /* player */
 .player {
   width: 90%;
-  max-width: 700px;
+  max-width: 800px;
   margin-top: 30px;
-  padding: 20px;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.6);
-  backdrop-filter: blur(10px);
 }
 
 #waveform {
-  margin: 15px 0;
+  height: 80px;
 }
 
+/* timeline */
+.timeline {
+  height: 4px;
+  background: linear-gradient(to right,#4facfe,#ff00cc);
+  border-radius: 10px;
+  margin-top: -10px;
+}
+
+/* controls */
 .controls {
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: 15px;
+  margin-top: 15px;
 }
 
-button {
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
+.btn {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   cursor: pointer;
+  transition: 0.3s;
 }
 
+.btn:hover {
+  transform: scale(1.1);
+  background: rgba(255,255,255,0.2);
+}
+
+/* time */
+.time {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-top: 5px;
+  opacity: 0.7;
+}
+
+/* playlist */
 .playlist {
   width: 90%;
-  max-width: 700px;
+  max-width: 800px;
   margin-top: 20px;
 }
 
 .track {
   padding: 12px;
   border-radius: 10px;
+  margin-bottom: 8px;
+  background: rgba(255,255,255,0.05);
   cursor: pointer;
   transition: 0.2s;
 }
 
 .track:hover {
-  background: rgba(0,0,0,0.05);
+  background: rgba(255,255,255,0.1);
 }
 
 .active {
-  background: #ffd1dc;
+  background: linear-gradient(to right,#4facfe,#ff00cc);
+}
+
+.track a {
+  margin-right: 10px;
+  font-size: 12px;
+  color: #ccc;
 }
 </style>
 </head>
 
 <body>
 
-<h2>🎧 Auto Playlist Player</h2>
+<h2>🎧 Auto Audio Player</h2>
 
 <div class="player">
   <div id="waveform"></div>
+  <div class="timeline"></div>
 
-  <div class="controls">
-    <button onclick="skip(-10)">⏪10</button>
-    <button onclick="skip(-5)">◀5</button>
-    <button onclick="playPause()">▶</button>
-    <button onclick="skip(5)">5▶</button>
-    <button onclick="skip(10)">10⏩</button>
+  <div class="time">
+    <span id="current">00:00</span>
+    <span id="total">00:00</span>
   </div>
 
-  <div style="text-align:center;margin-top:10px;">
-    <span id="current">00:00</span> /
-    <span id="total">00:00</span>
+  <div class="controls">
+    <div class="btn" onclick="skip(-10)">⏪</div>
+    <div class="btn" onclick="skip(-5)">◀</div>
+    <div class="btn" onclick="playPause()">⏯</div>
+    <div class="btn" onclick="skip(5)">▶</div>
+    <div class="btn" onclick="skip(10)">⏩</div>
   </div>
 </div>
 
 <div class="playlist" id="playlist"></div>
 
 <script>
-const tracks = [
-  {name:"Track 1", src:"../audio/track1.mp3"},
-  {name:"Track 2", src:"../audio/track2.mp3"},
-  {name:"Track 3", src:"../audio/track3.mp3"}
-];
+/* 🔥 SỬA 2 DÒNG NÀY */
+const USERNAME = "ms-thuy-classes";
+const REPO = "audio-new";
 
+let tracks = [];
 let currentIndex = 0;
 
-let wavesurfer = WaveSurfer.create({
-  container:'#waveform',
-  waveColor:'#ccc',
-  progressColor:'#ff9aa2',
-  height:80
+/* wavesurfer */
+const wavesurfer = WaveSurfer.create({
+  container: '#waveform',
+  waveColor: '#666',
+  progressColor: '#ff00cc',
+  height: 80,
+  barWidth: 2,
+  barGap: 2,
 });
 
+/* format time */
 function formatTime(sec){
   let m = Math.floor(sec/60);
   let s = Math.floor(sec%60);
   return `${m}:${s.toString().padStart(2,'0')}`;
 }
 
-function loadTrack(index){
-  currentIndex = index;
-  wavesurfer.load(tracks[index].src);
-  updateActive();
-}
-
+/* controls */
 function playPause(){
   wavesurfer.playPause();
 }
@@ -127,6 +161,7 @@ function skip(sec){
   wavesurfer.skip(sec);
 }
 
+/* update time */
 wavesurfer.on('ready', ()=>{
   document.getElementById('total').innerText =
     formatTime(wavesurfer.getDuration());
@@ -137,20 +172,34 @@ wavesurfer.on('audioprocess', ()=>{
     formatTime(wavesurfer.getCurrentTime());
 });
 
-/* 🔥 AUTO RENDER PLAYLIST */
-const playlistEl = document.getElementById("playlist");
+/* load track */
+function loadTrack(index){
+  currentIndex = index;
+  wavesurfer.load(tracks[index].src);
+  updateActive();
+}
 
+/* render playlist */
 function renderPlaylist(){
-  playlistEl.innerHTML = "";
-  tracks.forEach((track, index)=>{
+  const el = document.getElementById("playlist");
+  el.innerHTML = "";
+
+  tracks.forEach((t,i)=>{
     let div = document.createElement("div");
     div.className = "track";
-    div.innerText = `🎵 ${track.name}`;
-    div.onclick = ()=> loadTrack(index);
-    playlistEl.appendChild(div);
+
+    div.innerHTML = `
+      🎵 ${t.name}<br>
+      <a href="${t.src}" target="_blank">🔗 Link</a>
+      <a href="${t.src}" download>⬇ Download</a>
+    `;
+
+    div.onclick = ()=> loadTrack(i);
+    el.appendChild(div);
   });
 }
 
+/* highlight active */
 function updateActive(){
   document.querySelectorAll(".track").forEach((el,i)=>{
     el.classList.toggle("active", i === currentIndex);
@@ -165,9 +214,20 @@ wavesurfer.on('finish', ()=>{
   wavesurfer.play();
 });
 
-/* init */
-renderPlaylist();
-loadTrack(0);
+/* 🚀 AUTO LOAD FILE FROM GITHUB */
+fetch(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/audio`)
+  .then(res => res.json())
+  .then(files => {
+    tracks = files
+      .filter(f => f.name.endsWith('.mp3'))
+      .map(f => ({
+        name: f.name,
+        src: f.download_url
+      }));
+
+    renderPlaylist();
+    loadTrack(0);
+  });
 </script>
 
 </body>
