@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audio Player Pro</title>
+
+<script src="https://unpkg.com/wavesurfer.js"></script>
+
+<style>
+body {
+  font-family: sans-serif;
+  margin: 0;
+  background: linear-gradient(135deg,#fdfbfb,#ebedee);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* player */
+.player {
+  width: 90%;
+  max-width: 700px;
+  margin-top: 30px;
+  padding: 20px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(10px);
+}
+
+#waveform {
+  margin: 15px 0;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+button {
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.playlist {
+  width: 90%;
+  max-width: 700px;
+  margin-top: 20px;
+}
+
+.track {
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.track:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.active {
+  background: #ffd1dc;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🎧 Auto Playlist Player</h2>
+
+<div class="player">
+  <div id="waveform"></div>
+
+  <div class="controls">
+    <button onclick="skip(-10)">⏪10</button>
+    <button onclick="skip(-5)">◀5</button>
+    <button onclick="playPause()">▶</button>
+    <button onclick="skip(5)">5▶</button>
+    <button onclick="skip(10)">10⏩</button>
+  </div>
+
+  <div style="text-align:center;margin-top:10px;">
+    <span id="current">00:00</span> /
+    <span id="total">00:00</span>
+  </div>
+</div>
+
+<div class="playlist" id="playlist"></div>
+
+<script>
+const tracks = [
+  {name:"Track 1", src:"../audio/track1.mp3"},
+  {name:"Track 2", src:"../audio/track2.mp3"},
+  {name:"Track 3", src:"../audio/track3.mp3"}
+];
+
+let currentIndex = 0;
+
+let wavesurfer = WaveSurfer.create({
+  container:'#waveform',
+  waveColor:'#ccc',
+  progressColor:'#ff9aa2',
+  height:80
+});
+
+function formatTime(sec){
+  let m = Math.floor(sec/60);
+  let s = Math.floor(sec%60);
+  return `${m}:${s.toString().padStart(2,'0')}`;
+}
+
+function loadTrack(index){
+  currentIndex = index;
+  wavesurfer.load(tracks[index].src);
+  updateActive();
+}
+
+function playPause(){
+  wavesurfer.playPause();
+}
+
+function skip(sec){
+  wavesurfer.skip(sec);
+}
+
+wavesurfer.on('ready', ()=>{
+  document.getElementById('total').innerText =
+    formatTime(wavesurfer.getDuration());
+});
+
+wavesurfer.on('audioprocess', ()=>{
+  document.getElementById('current').innerText =
+    formatTime(wavesurfer.getCurrentTime());
+});
+
+/* 🔥 AUTO RENDER PLAYLIST */
+const playlistEl = document.getElementById("playlist");
+
+function renderPlaylist(){
+  playlistEl.innerHTML = "";
+  tracks.forEach((track, index)=>{
+    let div = document.createElement("div");
+    div.className = "track";
+    div.innerText = `🎵 ${track.name}`;
+    div.onclick = ()=> loadTrack(index);
+    playlistEl.appendChild(div);
+  });
+}
+
+function updateActive(){
+  document.querySelectorAll(".track").forEach((el,i)=>{
+    el.classList.toggle("active", i === currentIndex);
+  });
+}
+
+/* auto next */
+wavesurfer.on('finish', ()=>{
+  currentIndex++;
+  if(currentIndex >= tracks.length) currentIndex = 0;
+  loadTrack(currentIndex);
+  wavesurfer.play();
+});
+
+/* init */
+renderPlaylist();
+loadTrack(0);
+</script>
+
+</body>
+</html>
